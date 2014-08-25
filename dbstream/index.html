@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.2/styles/default.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <title>Database Stream Node.js Manual &amp; Documentation</title>
+        <style type="text/css">
+        body {
+            border-top: 6px #8CC84B solid;
+            padding-top: 49px;
+        }
+        h1, a, a:hover {
+            color: #480;
+        }
+        blockquote {
+            font-size: 14px;
+            color: #666;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    <h3>Available Implementations</h3>
+                    <ul>
+                        <li>
+                        <a href="https://github.com/avinoamr/dbstream-memory">Memory</a></li>
+                        <li>
+                        <a href="https://github.com/avinoamr/dbstream-fs">FileSystem</a></li>
+                        <li>
+                        <a href="https://github.com/avinoamr/dbstream-mongo">MongoDB</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-9">
+
+    <!--    
+
+    HTML GENERATED FROM README WITH: 
+    https://developer.github.com/v3/markdown/ 
+
+    require( "fs" ).writeFileSync( "README.md", JSON.stringify( { mode: "markdown", text: require( "fs" ).readFileSync( "README.md" ).toString() } ))
+    curl https://api.github.com/markdown -i --data-binary "@README.md" -X POST
+
+    -->
+
+
+<h1>
+<a name="user-content-database-stream-api-specification-for-nodejs" class="anchor" href="#database-stream-api-specification-for-nodejs" aria-hidden="true"><span class="octicon octicon-link"></span></a>Database Stream API Specification for Node.js</h1>
+
+<p>A Database Stream (or Cursor) is an abstract interface for creating portable and generic modules for accessing databases  using Node Streams. The API specification is Database-agnostic which makes it easy to switch databases, configurations and implementations seamlessly. Write your code once - and it will run against any database.</p>
+
+<blockquote>
+<p>Due to the massive fragmentation of Node libraries for accessing different databases, it's difficult to write elegant code that is fully portable across database systems. This API has been designed to encourage similarity between Node modules that are used to access databases. Inspired by Python's <a href="http://legacy.python.org/dev/peps/pep-0249/">PEP 249</a></p>
+</blockquote>
+
+<h3>
+<a name="user-content-usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h3>
+
+<p>This example shows the effectiveness of using Node streams, and the functional, stream-lined API of the <code>dbstream</code> API.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s2">"dbstream-somedb"</span> <span class="p">);</span>
+<span class="kd">var</span> <span class="nx">connection</span> <span class="o">=</span> <span class="nx">db</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span> <span class="cm">/* settings */</span> <span class="p">);</span>
+
+<span class="c1">// write data</span>
+<span class="kd">var</span> <span class="nx">cursor</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">connect</span><span class="p">.</span><span class="nx">Cursor</span><span class="p">();</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">write</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">"Hello"</span><span class="p">,</span> <span class="nx">id</span><span class="o">:</span> <span class="mi">1</span> <span class="p">});</span> <span class="c1">// upsert where id == 1</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">write</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">"World"</span> <span class="p">});</span> <span class="c1">// insert</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+
+<span class="c1">// read data</span>
+<span class="k">new</span> <span class="nx">connect</span><span class="p">.</span><span class="nx">Cursor</span><span class="p">()</span>
+  <span class="p">.</span><span class="nx">find</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">"Hello"</span> <span class="p">})</span>
+  <span class="p">.</span><span class="nx">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+  <span class="p">.</span><span class="nx">on</span><span class="p">(</span> <span class="s2">"data"</span><span class="p">,</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="p">)</span>
+</pre></div>
+
+<p>Because cursors are just Node Streams, you can pipe them together to construct functional data-processing pipelines:</p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">es</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"event-stream"</span><span class="p">);</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">"Hello"</span> <span class="p">})</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">es</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="nx">callback</span><span class="p">){</span>
+    <span class="nx">obj</span><span class="p">.</span><span class="nx">name</span> <span class="o">+=</span> <span class="s2">"!"</span><span class="p">;</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span>
+  <span class="p">})</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="k">new</span> <span class="nx">Cursor</span><span class="p">())</span> <span class="c1">// write the modifications back to the database</span>
+  <span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">)</span> <span class="c1">// write the saved object to stdout</span>
+</pre></div>
+
+<h3>
+<a name="user-content-class-dbstreamcursor" class="anchor" href="#class-dbstreamcursor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Class: dbstream.Cursor</h3>
+
+<p>Cursors provide the core functionality of the API. They are simply <a href="http://nodejs.org/api/stream.html#stream_class_stream_duplex">Node Streams</a> that expose an API for defining a Database operation in a DB-agnostic manner:</p>
+
+<p>Cursors represent a single database operation, and are executed lazily when the <code>cursor.read()</code> method is executed (or in <a href="http://nodejs.org/api/stream.html#stream_class_stream_readable">flowing mode</a>, when a listener is attached to the <code>'data'</code> event)</p>
+
+<h4>
+<a name="user-content-cursorfindquery" class="anchor" href="#cursorfindquery" aria-hidden="true"><span class="octicon octicon-link"></span></a>cursor.find(query)</h4>
+
+<ul>
+<li>
+<code>query</code> a key-value Object that defines the database query selection</li>
+<li>Returns the Cursor instance itself</li>
+</ul><p>Sets the query object of the cursor</p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">cursor</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">"Hello"</span> <span class="p">});</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">"data"</span><span class="p">,</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">);</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">"end"</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">"Done reading"</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+<h4>
+<a name="user-content-cursorsortkey--direction" class="anchor" href="#cursorsortkey--direction" aria-hidden="true"><span class="octicon octicon-link"></span></a>cursor.sort(key [, direction])</h4>
+
+<ul>
+<li>
+<code>key</code> A String for the field-name to sort by</li>
+<li>
+<code>direction</code> An integer that defines the sort direction: 1 for ascending (default), -1 for decending</li>
+<li>Returns the Cursor instance itself</li>
+</ul><p>Sets the sort key and direction of the cursor. Can be called multiple times to define multiple sort keys.</p>
+
+<h4>
+<a name="user-content-cursorskipn" class="anchor" href="#cursorskipn" aria-hidden="true"><span class="octicon octicon-link"></span></a>cursor.skip(n)</h4>
+
+<ul>
+<li>
+<code>n</code> Number of rows to skip</li>
+<li>Returns the Cursor instance itself</li>
+</ul><p>Sets the number of rows that need to be skipped</p>
+
+<h4>
+<a name="user-content-cursorlimitn" class="anchor" href="#cursorlimitn" aria-hidden="true"><span class="octicon octicon-link"></span></a>cursor.limit(n)</h4>
+
+<ul>
+<li>
+<code>n</code> Number of maximum rows to return</li>
+<li>Returns Cursor object itself</li>
+</ul><p>Sets the maximum number of rows to return</p>
+
+<h4>
+<a name="user-content-cursorwriteobject-encoding-callback" class="anchor" href="#cursorwriteobject-encoding-callback" aria-hidden="true"><span class="octicon octicon-link"></span></a>cursor.write(object, encoding, callback)</h4>
+
+<ul>
+<li>
+<code>object</code> an Object to save. If <code>id</code> exists, the operation will be an upsert</li>
+<li>Returns a boolean indicating if the object was processed internally</li>
+</ul><p>See <a href="http://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback">Node Stream.write()</a></p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">cursor</span><span class="p">.</span><span class="nx">write</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">"Hello"</span> <span class="p">});</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">write</span><span class="p">({</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">"World"</span><span class="p">,</span> <span class="nx">id</span><span class="o">:</span> <span class="mi">1</span> <span class="p">});</span> <span class="c1">// upsert</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s2">"finish"</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="s2">"Everything was saved"</span> <span class="p">);</span>
+<span class="p">})</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">end</span><span class="p">()</span>
+</pre></div>
+
+<h4>
+<a name="user-content-cursorremoveobject-callback" class="anchor" href="#cursorremoveobject-callback" aria-hidden="true"><span class="octicon octicon-link"></span></a>cursor.remove(object, callback)</h4>
+
+<ul>
+<li>
+<code>object</code> an Object to remove. Only relevant when there's an <code>id</code> field</li>
+<li>Returns a boolean indicating if the object was processed internally</li>
+</ul><p>Works exactly like <code>.write</code>, only removes the object instead of saving it</p>
+
+<div class="highlight highlight-javascript"><pre><span class="nx">cursor</span><span class="p">.</span><span class="nx">remove</span><span class="p">({</span> <span class="nx">id</span><span class="o">:</span> <span class="mi">1</span> <span class="p">});</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span> <span class="s2">"finish"</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="s2">"ID: 1 was removed"</span> <span class="p">);</span>
+<span class="p">});</span>
+<span class="nx">cursor</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+</pre></div>
+
+<h3>
+<a name="user-content-implementation" class="anchor" href="#implementation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implementation</h3>
+
+<p>Any module that implements this API, is dbstreams-compatible, which will make it fully portable across database systems. However, this module provides a skeleton Cursor that you can extend which will make the construction of libraries easier. Your module just needs to implement the <code>_save</code>, <code>_load</code>, <code>_remove</code> and the <code>connect</code> method on the module:</p>
+
+<div class="highlight highlight-javascript"><pre><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"dbstream"</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"util"</span><span class="p">);</span>
+
+<span class="nx">util</span><span class="p">.</span><span class="nx">inherits</span><span class="p">(</span><span class="nx">MyCursor</span><span class="p">,</span> <span class="nx">db</span><span class="p">.</span><span class="nx">Cursor</span><span class="p">);</span>
+<span class="kd">function</span> <span class="nx">MyCursor</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">MyCursor</span><span class="p">.</span><span class="nx">super_</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span> <span class="k">this</span> <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">MyCursor</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_load</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">size</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// read objects from the database, and call this.push( object ) for each one</span>
+  <span class="c1">// when you're done reading, call this.push( null )</span>
+  <span class="c1">// Use this._query, this._sort, this._skip and this._limit</span>
+<span class="p">}</span>
+
+<span class="nx">MyCursor</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_save</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// insert (or upsert, if there's an id)  the object, and call callback() when done</span>
+<span class="p">}</span>
+
+<span class="nx">MyCursor</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">_remove</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// remove object (preferrably by id) and call callback() when done</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">connect</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span> <span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">{</span>
+    <span class="nx">Cursor</span><span class="o">:</span> <span class="nx">MyCursor</span> <span class="c1">// expose the Cursor constructor</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+                </div>
+            </div>
+        </div>
+        <a href="https://github.com/avinoamr/dbstream"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+    </body>
+</html>
